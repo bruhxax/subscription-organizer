@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Органайзер подписок</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <!-- Loader -->
+    <div id="loader" class="loader">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Main Container -->
+    <div id="app" class="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1 class="header-title">💳 Мои подписки</h1>
+                <button id="themeToggle" class="theme-toggle">🌙</button>
+            </div>
+        </header>
+
+        <!-- Stats Dashboard -->
+        <section class="stats-dashboard">
+            <div class="stat-card primary">
+                <div class="stat-icon">💰</div>
+                <div class="stat-info">
+                    <div class="stat-label">Месячные расходы</div>
+                    <div class="stat-value" id="monthlyExpense">$0.00</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📅</div>
+                <div class="stat-info">
+                    <div class="stat-label">Годовые расходы</div>
+                    <div class="stat-value" id="yearlyExpense">$0.00</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">✅</div>
+                <div class="stat-info">
+                    <div class="stat-label">Активных</div>
+                    <div class="stat-value" id="activeCount">0</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🔔</div>
+                <div class="stat-info">
+                    <div class="stat-label">Скоро продление</div>
+                    <div class="stat-value" id="upcomingCount">0</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Filters and Sort -->
+        <section class="controls">
+            <div class="filter-group">
+                <button class="filter-btn active" data-filter="all">Все</button>
+                <button class="filter-btn" data-filter="active">Активные</button>
+                <button class="filter-btn" data-filter="inactive">Неактивные</button>
+            </div>
+            <div class="sort-group">
+                <select id="sortSelect" class="sort-select">
+                    <option value="date">По дате</option>
+                    <option value="price">По цене</option>
+                    <option value="name">По имени</option>
+                    <option value="category">По категории</option>
+                </select>
+            </div>
+        </section>
+
+        <!-- Subscriptions List -->
+        <section class="subscriptions-section">
+            <div id="subscriptionsList" class="subscriptions-list">
+                <!-- Subscriptions will be rendered here -->
+            </div>
+            
+            <!-- Empty State -->
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <div class="empty-icon">📭</div>
+                <h3>Нет подписок</h3>
+                <p>Добавьте свою первую подписку, чтобы начать отслеживать расходы</p>
+            </div>
+        </section>
+
+        <!-- Add Button -->
+        <button id="addBtn" class="add-btn" title="Добавить подписку">
+            <span class="add-icon">+</span>
+        </button>
+    </div>
+
+    <!-- Modal for Add/Edit Subscription -->
+    <div id="subscriptionModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Добавить подписку</h2>
+                <button class="modal-close" id="modalClose">&times;</button>
+            </div>
+            <form id="subscriptionForm" class="subscription-form">
+                <div class="form-group">
+                    <label for="subName">Название <span class="required">*</span></label>
+                    <input type="text" id="subName" name="name" required placeholder="Netflix, Spotify...">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="subPrice">Цена <span class="required">*</span></label>
+                        <input type="number" id="subPrice" name="price" step="0.01" required placeholder="9.99">
+                    </div>
+                    <div class="form-group">
+                        <label for="subCurrency">Валюта</label>
+                        <select id="subCurrency" name="currency">
+                            <option value="USD">USD $</option>
+                            <option value="EUR">EUR €</option>
+                            <option value="RUB">RUB ₽</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="subCategory">Категория <span class="required">*</span></label>
+                    <select id="subCategory" name="category" required>
+                        <option value="">Выберите категорию</option>
+                        <option value="Streaming">📺 Стриминг</option>
+                        <option value="Music">🎵 Музыка</option>
+                        <option value="Gaming">🎮 Игры</option>
+                        <option value="Education">📚 Обучение</option>
+                        <option value="Work">💼 Работа</option>
+                        <option value="VPN">🔒 VPN</option>
+                        <option value="Cloud Storage">☁️ Облако</option>
+                        <option value="Fitness">💪 Фитнес</option>
+                        <option value="News">📰 Новости</option>
+                        <option value="Software">💻 ПО</option>
+                        <option value="Other">📦 Другое</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="subBilling">Период оплаты</label>
+                    <select id="subBilling" name="billing_cycle">
+                        <option value="monthly">Ежемесячно</option>
+                        <option value="yearly">Ежегодно</option>
+                        <option value="weekly">Еженедельно</option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="subStartDate">Дата начала <span class="required">*</span></label>
+                        <input type="date" id="subStartDate" name="start_date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="subNextPayment">След. платёж <span class="required">*</span></label>
+                        <input type="date" id="subNextPayment" name="next_payment" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="subTrialEnd">Окончание пробного периода</label>
+                    <input type="date" id="subTrialEnd" name="trial_end_date">
+                </div>
+
+                <div class="form-group">
+                    <label for="subDescription">Описание</label>
+                    <textarea id="subDescription" name="description" rows="3" placeholder="Дополнительная информация..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="subNotes">Заметки</label>
+                    <textarea id="subNotes" name="notes" rows="2" placeholder="Личные заметки..."></textarea>
+                </div>
+
+                <div class="color-picker-group">
+                    <label>Цвет</label>
+                    <div class="color-picker">
+                        <input type="radio" name="color" value="#FF6B6B" id="color1" checked>
+                        <label for="color1" style="background: #FF6B6B;"></label>
+                        
+                        <input type="radio" name="color" value="#4ECDC4" id="color2">
+                        <label for="color2" style="background: #4ECDC4;"></label>
+                        
+                        <input type="radio" name="color" value="#45B7D1" id="color3">
+                        <label for="color3" style="background: #45B7D1;"></label>
+                        
+                        <input type="radio" name="color" value="#96CEB4" id="color4">
+                        <label for="color4" style="background: #96CEB4;"></label>
+                        
+                        <input type="radio" name="color" value="#FFEAA7" id="color5">
+                        <label for="color5" style="background: #FFEAA7;"></label>
+                        
+                        <input type="radio" name="color" value="#A29BFE" id="color6">
+                        <label for="color6" style="background: #A29BFE;"></label>
+                    </div>
+                </div>
+
+                <input type="hidden" id="subId" name="id">
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelBtn">Отмена</button>
+                    <button type="submit" class="btn btn-primary" id="saveBtn">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Subscription Detail Modal -->
+    <div id="detailModal" class="modal">
+        <div class="modal-content detail-modal">
+            <div class="detail-header" id="detailHeader">
+                <button class="modal-close" id="detailClose">&times;</button>
+                <h2 id="detailName"></h2>
+                <span class="detail-category" id="detailCategory"></span>
+            </div>
+            <div class="detail-body">
+                <div class="detail-info">
+                    <div class="info-item">
+                        <span class="info-label">💰 Цена</span>
+                        <span class="info-value" id="detailPrice"></span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">📅 Период</span>
+                        <span class="info-value" id="detailBilling"></span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">🗓 Дата начала</span>
+                        <span class="info-value" id="detailStart"></span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">🔔 След. платёж</span>
+                        <span class="info-value" id="detailNext"></span>
+                    </div>
+                    <div class="info-item" id="trialInfo" style="display: none;">
+                        <span class="info-label">⏰ Конец пробного</span>
+                        <span class="info-value" id="detailTrial"></span>
+                    </div>
+                </div>
+                <div class="detail-description" id="detailDescription" style="display: none;"></div>
+                <div class="detail-notes" id="detailNotes" style="display: none;"></div>
+            </div>
+            <div class="detail-actions">
+                <button class="btn btn-edit" id="editBtn">✏️ Редактировать</button>
+                <button class="btn btn-toggle" id="toggleBtn">🔄 Переключить</button>
+                <button class="btn btn-delete" id="deleteBtn">🗑 Удалить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Premium Limit Warning -->
+    <div id="premiumModal" class="modal">
+        <div class="modal-content premium-modal">
+            <div class="premium-header">
+                <h2>⭐ Обновитесь до Premium</h2>
+                <button class="modal-close" id="premiumClose">&times;</button>
+            </div>
+            <div class="premium-body">
+                <p>Вы достигли лимита бесплатной версии (5 подписок).</p>
+                <p>Обновитесь до Premium для:</p>
+                <ul class="premium-features">
+                    <li>✅ Неограниченного количества подписок</li>
+                    <li>📊 Расширенной аналитики</li>
+                    <li>📥 Экспорта данных</li>
+                    <li>🎨 Эксклюзивных тем</li>
+                    <li>🚫 Без рекламы</li>
+                </ul>
+                <div class="premium-price">Всего $2.99/месяц</div>
+            </div>
+            <div class="premium-actions">
+                <button class="btn btn-premium" id="upgradePremium">⭐ Оформить Premium</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

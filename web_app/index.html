@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Органайзер Подписок</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <h1>📋 Органайзер Подписок</h1>
+            <div class="user-info">
+                <span id="user-name">Пользователь</span>
+                <button id="theme-toggle" class="icon-button">🌙</button>
+            </div>
+        </header>
+
+        <main class="app-main">
+            <div class="stats-widgets">
+                <div class="widget">
+                    <h3>💰 Общие расходы</h3>
+                    <p id="total-expenses">0 RUB/мес</p>
+                </div>
+                <div class="widget">
+                    <h3>📅 Ближайшие продления</h3>
+                    <p id="upcoming-renewals">0 подписок</p>
+                </div>
+                <div class="widget">
+                    <h3>🎁 Бесплатные периоды</h3>
+                    <p id="free-trials">0 активных</p>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button id="add-subscription-btn" class="primary-btn">➕ Добавить подписку</button>
+                <div class="filter-sort">
+                    <select id="category-filter">
+                        <option value="all">Все категории</option>
+                        <option value="entertainment">Развлечения</option>
+                        <option value="work">Работа</option>
+                        <option value="education">Обучение</option>
+                        <option value="vpn">VPN</option>
+                        <option value="other">Другое</option>
+                    </select>
+                    <select id="sort-by">
+                        <option value="end-date">По дате окончания</option>
+                        <option value="amount">По сумме</option>
+                        <option value="name">По названию</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="subscriptions-list" id="subscriptions-list">
+                <!-- Список подписок будет загружен здесь -->
+                <div class="empty-state">
+                    <p>У вас пока нет подписок. Нажмите "Добавить подписку", чтобы начать.</p>
+                </div>
+            </div>
+        </main>
+
+        <div class="modal" id="add-subscription-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Добавить подписку</h2>
+                    <button class="close-btn" id="close-modal">×</button>
+                </div>
+                <form id="subscription-form">
+                    <div class="form-group">
+                        <label for="subscription-name">Название подписки</label>
+                        <input type="text" id="subscription-name" placeholder="например, Netflix" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="subscription-amount">Сумма в месяц (RUB)</label>
+                        <input type="number" id="subscription-amount" placeholder="например, 399" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="subscription-start-date">Дата начала</label>
+                        <input type="date" id="subscription-start-date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="subscription-end-date">Дата окончания (если известна)</label>
+                        <input type="date" id="subscription-end-date">
+                    </div>
+                    <div class="form-group">
+                        <label for="subscription-free-trial">Дата окончания бесплатного периода (если есть)</label>
+                        <input type="date" id="subscription-free-trial">
+                    </div>
+                    <div class="form-group">
+                        <label for="subscription-category">Категория</label>
+                        <select id="subscription-category" required>
+                            <option value="1">Развлечения</option>
+                            <option value="2">Работа</option>
+                            <option value="3">Обучение</option>
+                            <option value="4">VPN</option>
+                            <option value="5">Другое</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="subscription-notes">Заметки</label>
+                        <textarea id="subscription-notes" placeholder="Дополнительная информация"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="subscription-active" checked>
+                            Активная подписка
+                        </label>
+                    </div>
+                    <button type="submit" class="primary-btn">Сохранить подписку</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="modal" id="edit-subscription-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Редактировать подписку</h2>
+                    <button class="close-btn" id="close-edit-modal">×</button>
+                </div>
+                <form id="edit-subscription-form">
+                    <input type="hidden" id="edit-subscription-id">
+                    <div class="form-group">
+                        <label for="edit-subscription-name">Название подписки</label>
+                        <input type="text" id="edit-subscription-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-subscription-amount">Сумма в месяц (RUB)</label>
+                        <input type="number" id="edit-subscription-amount" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-subscription-start-date">Дата начала</label>
+                        <input type="date" id="edit-subscription-start-date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-subscription-end-date">Дата окончания</label>
+                        <input type="date" id="edit-subscription-end-date">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-subscription-free-trial">Бесплатный период</label>
+                        <input type="date" id="edit-subscription-free-trial">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-subscription-category">Категория</label>
+                        <select id="edit-subscription-category" required>
+                            <option value="1">Развлечения</option>
+                            <option value="2">Работа</option>
+                            <option value="3">Обучение</option>
+                            <option value="4">VPN</option>
+                            <option value="5">Другое</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-subscription-notes">Заметки</label>
+                        <textarea id="edit-subscription-notes"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="edit-subscription-active">
+                            Активная подписка
+                        </label>
+                    </div>
+                    <button type="submit" class="primary-btn">Сохранить изменения</button>
+                    <button type="button" id="delete-subscription-btn" class="danger-btn">Удалить подписку</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
